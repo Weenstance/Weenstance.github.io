@@ -1,9 +1,10 @@
 // Create the canvas
 var canvas = document.createElement("canvas");
 var ctx = canvas.getContext("2d");
-canvas.width = 512;
-canvas.height = 512;
-canvas.setAttribute('style', "position: absolute;  left: 50%;margin-left:-256px; top: 50%;margin-top:-256px; border:4px solid black");
+var scrSize = Math.min(window.innerWidth, window.innerHeight) - 16;
+canvas.width = scrSize;
+canvas.height = scrSize;
+canvas.setAttribute('style', "position: absolute;  left: 50%;margin-left:" + (-scrSize*0.5-4) + "px; top: 50%;margin-top:" + (-scrSize*0.5-4) + "px; border:4px solid black");
 document.body.appendChild(canvas);
 
 var spriteReady = [];
@@ -27,8 +28,8 @@ monsters[0] = monster({
         timePerFrame: 0.133,
         numberOfFrames: 5,
         image: 1,
-        xpos: 24 / 32 * 64,
-        ypos: 24 / 32 * 64,
+        xpos: 0,
+        ypos: 0,
         scale: 16,
         loop: true
     })
@@ -67,17 +68,19 @@ function sprite (options) {
 
     that.render = function () {
         // Draw the animation
-        if (spriteReady[that.image])
+        if (spriteReady[that.image]) {
+            var s = (scrSize / 512 * 16 / 24);
             that.context.drawImage(
                 spriteImg[that.image],
                 frameIndex * spriteImg[that.image].width / numberOfFrames,
                 0,
                 spriteImg[that.image].width / numberOfFrames,
                 spriteImg[that.image].height,
-                that.xpos,
-                that.ypos,
-                spriteImg[that.image].width * that.scale / numberOfFrames,
-                spriteImg[that.image].height * that.scale);
+                (that.xpos - spriteImg[that.image].width / numberOfFrames * 0.5 * that.scale) * s + scrSize * 0.5 - scrSize / 48,
+                (that.ypos - spriteImg[that.image].height * 0.5 * that.scale) * s + scrSize * 0.5 - scrSize / 48,
+                spriteImg[that.image].width * that.scale * s / numberOfFrames,
+                spriteImg[that.image].height * that.scale * s);
+        }
     };
     
     that.update = function (delta) {
@@ -127,18 +130,18 @@ function update (modifier) {
 // Draw everything
 function render (fps) {
 	if (spriteReady[0]) {
-		ctx.drawImage(spriteImg[0], 0, 0, 512, 512);
+		ctx.drawImage(spriteImg[0], 0, 0, scrSize, scrSize);
 	}
 
     //for (var i = 0; i < monsters.length; i++)
     monsters[0].render();
 
 	// Score
-	ctx.fillStyle = "rgb(250, 250, 250)";
+	ctx.fillStyle = "rgb(0, 0, 0)";
 	ctx.font = "24px Helvetica";
 	ctx.textAlign = "left";
 	ctx.textBaseline = "top";
-	//ctx.fillText("Goblins caught: " + ", fps: " + fps, 32, 32);
+	ctx.fillText("1. Strangle the thing.", 32, 32);
 }
 
 // The main game loop
