@@ -1,7 +1,7 @@
 // Create the canvas
 var canvas = document.createElement("canvas");
 var ctx = canvas.getContext("2d");
-var scrSize = Math.min(window.innerWidth, window.innerHeight) - 16;
+var scrSize = Math.min(window.innerWidth, window.innerHeight) - 48;
 canvas.width = scrSize;
 canvas.height = scrSize;
 canvas.setAttribute('style', "position: absolute;  left: 50%;margin-left:" + (-scrSize*0.5-4) + "px; top: 50%;margin-top:" + (-scrSize*0.5-4) + "px; border:4px solid black");
@@ -104,6 +104,37 @@ function sprite (options) {
     return that;
 }
 
+
+var room = 0;
+var monster;
+
+var options = [];
+
+var choices = [];
+choices[0] = choice ({
+    text: "Strangle the thing."
+});
+choices[1] = choice ({
+    text: "Kick it."
+});
+choices[2] = choice ({
+    text: "Make a silly face."
+});
+
+function choice (options) {
+    var that = {};
+    that.text = options.text;
+    return that;
+}
+
+function option (options) {
+    var that = {};
+    that.choice = options.choice;
+    that.outcome = options.outcome;
+    return that;
+}
+
+
 // Handle keyboard controls
 var keysDown = {};
 
@@ -115,17 +146,55 @@ addEventListener("keyup", function (e) {
 	delete keysDown[e.keyCode];
 }, false);
 
-// Reset the game when the player catches a monster
-function reset () {
+addEventListener('click', function(evt) {
+    var mousePos = getMousePos(canvas, evt);
+    
+    for (var i = 0; i < 3; i++)
+        if (isInside(mousePos, button[i]))
+            alert('clicked inside rect');
+}, false);
 
+function getMousePos(canvas, event) {
+    var rect = canvas.getBoundingClientRect();
+    return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+    };
+}
+function isInside(pos, rect){
+    return pos.x > rect.x && pos.x < rect.x+rect.width && pos.y < rect.y+rect.height && pos.y > rect.y;
+}
+function rect(x, y, width, height) {
+    var that = {};
+    that.x = x;
+    that.y = y;
+    that.width = width;
+    that.height = height;
+    return that;
+}
+
+
+function moveToRoom (newRoom) {
+    room = newRoom;
+    monster = Object.assign({}, monsters[Math.floor(Math.random() * monsters.length)]);
+    for (var i = 0; i < 3; i++)
+        options[i] = option({
+            choice : choices[Math.floor(Math.random() * choices.length)],
+            outcome : i
+        });
 }
 
 // Update game objects
 function update (modifier) {
     
     //for (var i = 0; i < monsters.length; i++)
-    monsters[0].update(modifier);
+    monster.update(modifier);
 }
+
+var button = [];
+for (var i = 0; i < 3; i++)
+    button[i] = rect(scrSize * 0.05, scrSize * 0.015 + i * scrSize * 0.085, scrSize * 0.9, scrSize * 0.065);
+
 
 // Draw everything
 function render (fps) {
@@ -134,14 +203,19 @@ function render (fps) {
 	}
 
     //for (var i = 0; i < monsters.length; i++)
-    monsters[0].render();
+    monster.render();
 
 	// Score
-	ctx.fillStyle = "rgb(0, 0, 0)";
-	ctx.font = "24px Helvetica";
-	ctx.textAlign = "left";
-	ctx.textBaseline = "top";
-	ctx.fillText("1. Strangle the thing.", 32, 32);
+	ctx.font = scrSize * 0.055 + "px Helvetica";
+	ctx.textAlign = "center";
+	ctx.textBaseline = "middle";
+	for (var i = 0; i < 3; i++) {
+	    ctx.fillStyle = "rgba(256, 0, 0, 0.3)";
+	    ctx.fillRect(button[i].x, button[i].y, button[i].width, button[i].height);
+	    ctx.fillStyle = "rgb(0, 0, 0)";
+	    ctx.fillText(options[i].choice.text, button[i].x + button[i].width * 0.5, button[i].y + button[i].height * 0.5);
+	}
+	    //ctx.fillText(options[i].choice.text, i * scrSize / 3, 32);
 }
 
 // The main game loop
@@ -170,5 +244,5 @@ ctx.imageSmoothingEnabled = false;
 
 // Let's play this game!
 var then = Date.now();
-reset();
+moveToRoom(0);
 main();
